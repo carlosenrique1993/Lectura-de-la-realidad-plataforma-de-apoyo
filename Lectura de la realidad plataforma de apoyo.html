@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lectura de la Realidad — Plataforma Offline</title>
+<style>
+/* ===== VARIABLES Y TEMAS ===== */
+:root{
+  --bg:#f4f7fb; --card:#fff; --ink:#1f2937; --muted:#64748b;
+  --primary:#175cd3; --primary2:#0b4ab3; --line:#dbe3ef;
+  --ok:#14804a; --warn:#a15c00; --danger:#b42318;
+  --soft:#eef4ff; --shadow:0 8px 24px rgba(15,23,42,.08); --radius:16px;
+  --sidebar-bg:#0f172a; --sidebar-ink:#e5e7eb; --sidebar-muted:#a8b3c7;
+  --sidebar-active:#17305f; --sidebar-hover:#1e2d4a;
+  --input-bg:#fff; --input-border:#cbd5e1; --input-focus:#6b9ce8;
+  --table-stripe:#f8fafc; --table-head:#f8fafc;
+  --toast-bg:#0f172a; --toast-ink:#fff;
+  --map-bg:#fbfdff; --map-center:#f4f8ff; --map-border:#b9d0f3;
+  --question-bg:#fbfdff; --question-border:#cbd5e1;
+  --note-bg:#f7fafc; --note-border:#7c8ca5;
+  --banner-bg:#edf8f1; --banner-border:#c8e7d4; --banner-ink:#165b37;
+  --warning-bg:#fff8e7; --warning-border:#f1d28b; --warning-ink:#7a4a00;
+  --check-bg:#f8fafc; --check-border:#e2e8f0;
+  --kpi-bg:#f8fbff; --kpi-border:#dce7f5;
+  --modal-bg:#fff; --modal-overlay:rgba(15,23,42,.45);
+  --progress-bg:#e5ebf4; --progress-fill:linear-gradient(90deg,#2f80ed,#175cd3);
+  --btn-ghost-border:#334155;
+  --scrollbar-track:#f1f5f9; --scrollbar-thumb:#cbd5e1;
+}
+/* Modo oscuro */
+body.dark{
+  --bg:#0f172a; --card:#1e293b; --ink:#e2e8f0; --muted:#94a3b8;
+  --primary:#3b82f6; --primary2:#2563eb; --line:#334155;
+  --soft:#1e293b; --shadow:0 8px 24px rgba(0,0,0,.4);
+  --sidebar-bg:#020617; --sidebar-ink:#e2e8f0; --sidebar-muted:#94a3b8;
+  --sidebar-active:#1e3a5f; --sidebar-hover:#1e293b;
+  --input-bg:#0f172a; --input-border:#334155; --input-focus:#3b82f6;
+  --table-stripe:#1e293b; --table-head:#1e293b;
+  --toast-bg:#e2e8f0; --toast-ink:#0f172a;
+  --map-bg:#1e293b; --map-center:#1e293b; --map-border:#3b82f6;
+  --question-bg:#1e293b; --question-border:#334155;
+  --note-bg:#1e293b; --note-border:#64748b;
+  --banner-bg:#064e3b; --banner-border:#065f46; --banner-ink:#a7f3d0;
+  --warning-bg:#78350f; --warning-border:#92400e; --warning-ink:#fde68a;
+  --check-bg:#1e293b; --check-border:#334155;
+  --kpi-bg:#1e293b; --kpi-border:#334155;
+  --modal-bg:#1e293b; --modal-overlay:rgba(0,0,0,.7);
+  --progress-bg:#334155; --progress-fill:linear-gradient(90deg,#3b82f6,#2563eb);
+  --btn-ghost-border:#475569;
+  --scrollbar-track:#1e293b; --scrollbar-thumb:#475569;
+}
+/* Fondos personalizables */
+body.bg-soft{--bg:#f0f4f8} body.bg-warm{--bg:#faf6f0}
+body.dark.bg-soft{--bg:#0b1120} body.dark.bg-warm{--bg:#1a1410}
+/* Colores de acento personalizables */
+body.accent-green{--primary:#059669;--primary2:#047857;--input-focus:#34d399}
+body.accent-purple{--primary:#7c3aed;--primary2:#6d28d9;--input-focus:#a78bfa}
+body.accent-orange{--primary:#ea580c;--primary2:#c2410c;--input-focus:#fb923c}
+body.accent-rose{--primary:#e11d48;--primary2:#be123c;--input-focus:#fb7185}
+body.dark.accent-green{--primary:#10b981;--primary2:#059669;--input-focus:#6ee7b7}
+body.dark.accent-purple{--primary:#8b5cf6;--primary2:#7c3aed;--input-focus:#c4b5fd}
+body.dark.accent-orange{--primary:#f97316;--primary2:#ea580c;--input-focus:#fdba74}
+body.dark.accent-rose{--primary:#f43f5e;--primary2:#e11d48;--input-focus:#fda4af}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;transition:background .25s,color .25s}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--scrollbar-track)}
+::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:4px}
+
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:280px;background:var(--sidebar-bg);color:var(--sidebar-ink);padding:20px;position:sticky;top:0;height:100vh;overflow:auto;transition:background .25s,color .25s;display:flex;flex-direction:column}
+.brand{font-size:20px;font-weight:800;margin-bottom:8px}
+.brand-sub{font-size:12px;color:var(--sidebar-muted);margin-bottom:20px}
+.step{display:flex;gap:10px;align-items:flex-start;padding:11px 10px;border-radius:10px;margin:5px 0;color:var(--sidebar-muted);transition:.15s;cursor:pointer}
+.step:hover{background:var(--sidebar-hover)}
+.step .num{width:26px;height:26px;border-radius:50%;background:var(--sidebar-hover);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none;transition:.2s}
+.step.active{background:var(--sidebar-active);color:#fff}
+.step.active .num{background:var(--primary)}
+.step.done .num{background:var(--ok)}
+.step strong{display:block;font-size:13px}
+.step small{display:block;color:var(--sidebar-muted);font-size:11px;margin-top:2px}
+.step.active small{color:rgba(255,255,255,.7)}
+.sidebar .tools{margin-top:18px;border-top:1px solid var(--btn-ghost-border);padding-top:15px}
+
+/* Botones */
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;transition:.15s;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary2)}
+.btn-secondary{background:var(--card);color:var(--ink);border:1px solid var(--input-border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-ghost{background:transparent;color:var(--sidebar-ink);border:1px solid var(--btn-ghost-border)}
+.btn-ghost:hover{background:var(--sidebar-hover)}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.sidebar .btn{width:100%;margin:5px 0}
+
+/* Main */
+.main{flex:1;min-width:0}
+.topbar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 28px;display:flex;gap:12px;justify-content:space-between;align-items:center;transition:background .25s,border-color .25s;backdrop-filter:blur(8px)}
+.progress-wrap{max-width:520px;flex:1}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.progress{height:9px;background:var(--progress-bg);border-radius:99px;overflow:hidden}
+.progress > div{height:100%;background:var(--progress-fill);transition:width .3s}
+.content{max-width:1100px;margin:0 auto;padding:28px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:18px;transition:background .25s,border-color .25s,box-shadow .25s}
+h1{font-size:30px;line-height:1.1;margin:0 0 8px}
+h2{font-size:23px;margin:0 0 8px}
+h3{font-size:17px;margin:20px 0 8px}
+.lead{color:var(--muted);max-width:850px}
+.note{background:var(--note-bg);border-left:4px solid var(--note-border);padding:11px 14px;border-radius:8px;margin:12px 0;color:var(--muted);transition:background .25s}
+.source{font-size:12px;color:var(--muted);margin-top:10px}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Formularios */
+label{display:block;font-weight:700;font-size:13px;margin:2px 0 6px}
+.helper{font-size:12px;color:var(--muted);margin:0 0 8px}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;border:1px solid var(--input-border);border-radius:10px;padding:10px 11px;background:var(--input-bg);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s,background .25s,color .25s}
+textarea{min-height:115px;resize:vertical}
+.short textarea{min-height:80px}
+input:focus,textarea:focus,select:focus{border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(47,128,237,.1)}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.checks label{font-weight:600;background:var(--check-bg);padding:9px 10px;border:1px solid var(--check-border);border-radius:9px;transition:background .25s,border-color .25s;cursor:pointer}
+.checks input{margin-right:7px}
+.block-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi .mini{background:var(--kpi-bg);border:1px solid var(--kpi-border);border-radius:12px;padding:12px;transition:background .25s}
+.mini strong{display:block;font-size:22px}
+.mini span{font-size:11px;color:var(--muted)}
+
+/* Preguntas */
+.question{border:1px dashed var(--question-border);border-radius:12px;padding:13px;margin:10px 0;background:var(--question-bg);transition:background .25s,border-color .25s}
+.question p{font-weight:700;margin:0 0 7px}
+.question .tag{display:inline-block;background:var(--soft);color:var(--primary);font-size:10px;border-radius:999px;padding:3px 7px;margin-bottom:5px}
+
+/* Tablas */
+table{width:100%;border-collapse:collapse}
+.table-wrap{overflow:auto}
+th,td{border-bottom:1px solid var(--line);padding:9px;text-align:left;vertical-align:top;font-size:13px;transition:border-color .25s}
+th{font-size:12px;color:var(--muted);background:var(--table-head);transition:background .25s}
+tr:nth-child(even) td{background:var(--table-stripe)}
+
+/* Mapa de realidad */
+.reality-map{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:12px;align-items:stretch}
+.map-col{border:1px solid var(--map-border);border-radius:14px;padding:15px;background:var(--map-bg);transition:background .25s,border-color .25s}
+.map-col.center{background:var(--map-center);border-color:var(--primary)}
+.map-col h4{margin:0 0 8px}
+.arrow{text-align:center;align-self:center;font-size:28px;color:var(--muted)}
+
+/* Navegación */
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+.nav .right{display:flex;gap:8px}
+.footer-note{font-size:12px;color:var(--muted);text-align:center;margin:30px 0}
+
+/* Mensajes */
+.banner{padding:12px 14px;background:var(--banner-bg);border:1px solid var(--banner-border);color:var(--banner-ink);border-radius:10px;font-size:13px;transition:background .25s,color .25s}
+.warning{padding:12px 14px;background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning-ink);border-radius:10px;font-size:13px;transition:background .25s,color .25s}
+.hidden{display:none!important}
+.chip{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--soft);color:var(--primary);font-size:11px;margin:2px;font-weight:600}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:var(--modal-overlay);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal.show{display:flex}
+.modal-card{background:var(--modal-bg);width:min(760px,100%);max-height:90vh;overflow:auto;border-radius:18px;padding:22px;color:var(--ink);transition:background .25s,color .25s}
+
+/* Toast */
+.toast{position:fixed;right:20px;bottom:20px;background:var(--toast-bg);color:var(--toast-ink);padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:60}
+.toast.show{opacity:1;transform:none}
+
+/* Panel de personalización */
+.custom-panel{position:fixed;right:20px;bottom:80px;z-index:70;width:240px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:none;transition:background .25s,border-color .25s}
+.custom-panel.show{display:block}
+.custom-panel h4{margin:0 0 12px;font-size:14px}
+.custom-panel .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.custom-panel .opt{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);cursor:pointer;transition:.15s}
+.custom-panel .opt:hover{transform:scale(1.1)}
+.custom-panel .opt.active{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary)}
+.custom-panel .toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.custom-panel .toggle input{width:auto}
+.custom-toggle{position:fixed;right:20px;bottom:20px;z-index:71;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;border:0;font-size:20px;display:grid;place-items:center;box-shadow:var(--shadow);transition:.2s}
+.custom-toggle:hover{transform:scale(1.05)}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{width:230px}
+  .grid-3,.kpi{grid-template-columns:repeat(2,1fr)}
+  .reality-map{grid-template-columns:1fr}
+  .arrow{transform:rotate(90deg)}
+}
+@media(max-width:700px){
+  .app{display:block}
+  .sidebar{width:auto;height:auto;position:relative}
+  .main{width:100%}
+  .content{padding:14px}
+  .topbar{padding:10px 14px}
+  .grid-2,.grid-3,.checks,.kpi{grid-template-columns:1fr}
+  .custom-panel{right:10px;bottom:70px;width:200px}
+}
+
+/* Impresión */
+@media print{
+  body{background:#fff!important;font-size:11pt;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  .sidebar,.topbar,.no-print,.nav,.modal,.toast,.custom-panel,.custom-toggle{display:none!important}
+  .content{max-width:none;padding:0}
+  .card{box-shadow:none;border:0;padding:8px 0;margin-bottom:14px;break-inside:auto}
+  [data-step]{break-before:page}
+  .print-page{break-before:page}
+  .print-avoid{break-inside:avoid}
+  .question{break-inside:avoid}
+  textarea,input[type=text],input[type=number],input[type=date],select{border:0!important;padding:0!important;box-shadow:none!important;background:transparent!important;color:#000!important}
+  textarea{height:auto;min-height:0;overflow:visible;white-space:pre-wrap}
+  .checks label{border:0;padding:3px 0;background:transparent}
+  h1{font-size:24pt}h2{font-size:17pt}h3{font-size:13pt}
+  .source{font-size:9pt}
+  .kpi{grid-template-columns:repeat(4,1fr)}
+  .print-cover{display:block!important;min-height:85vh;display:flex!important;flex-direction:column;justify-content:center}
+}
+.print-cover{display:none}
+</style>
+</head>
+<body>
+
+<div class="app">
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar no-print">
+  <div class="brand">Lectura de la Realidad</div>
+  <div class="brand-sub">Plataforma offline para orientar y documentar el análisis del contexto socioeducativo.</div>
+  <div id="steps"></div>
+  <div class="tools">
+    <button class="btn btn-primary" onclick="saveLocal()">💾 Guardar ahora</button>
+    <button class="btn btn-ghost" onclick="loadFile()">📂 Cargar respaldo</button>
+    <button class="btn btn-ghost" onclick="downloadBackup()">⬇️ Descargar respaldo</button>
+    <button class="btn btn-secondary" onclick="printPDF()">🖨️ Imprimir / Guardar PDF</button>
+    <button class="btn btn-danger" onclick="resetAll()">🗑️ Borrar datos</button>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+<div class="topbar no-print">
+  <div class="progress-wrap">
+    <div class="progress-meta"><span id="stepLabel">Paso 1 de 9</span><span id="completion">0% completado</span></div>
+    <div class="progress"><div id="progressBar" style="width:0%"></div></div>
+  </div>
+  <div class="small" style="font-size:12px;color:var(--muted)">100% local · sin internet · guardado en este equipo</div>
+</div>
+
+<div class="content">
+<!-- Portada para impresión -->
+<div class="print-cover" id="printCover">
+  <div style="max-width:900px;margin:auto">
+    <div class="chip">DOCUMENTO FINAL</div>
+    <h1 style="margin-top:14px">Lectura de la realidad</h1>
+    <p class="lead">Análisis del contexto socioeducativo de la escuela para orientar el programa analítico.</p>
+    <div style="margin-top:28px" id="coverSummary"></div>
+  </div>
+</div>
+
+<!-- ===== PASO 1 ===== -->
+<section class="card" data-step="1">
+  <div class="block-title"><div><h1>1. Punto de partida</h1><p class="lead">Construye el encuadre de la escuela y del colectivo. El documento final debe permitir comprender quiénes somos, dónde estamos y desde qué condiciones analizamos nuestra realidad.</p></div><span class="chip">Inicio</span></div>
+  <div class="note">La lectura de la realidad no tiene un formato único: el colectivo decide su estructura, contenido y extensión. Es un proceso colectivo, continuo y actualizable. Esta plataforma propone una ruta amplia para no dejar fuera dimensiones importantes.</div>
+  <div class="grid grid-2">
+    <div><label>Nombre de la escuela</label><input data-key="school" type="text" placeholder="Ej. Escuela Primaria Rural..." /></div>
+    <div><label>CCT</label><input data-key="cct" type="text" placeholder="Clave del centro de trabajo" /></div>
+    <div><label>Localidad / municipio / entidad</label><input data-key="location" type="text" placeholder="Comunidad, municipio, estado" /></div>
+    <div><label>Fecha de elaboración</label><input data-key="date" type="date" /></div>
+    <div><label>Nivel educativo</label><select data-key="level"><option value="">Seleccionar</option><option>Preescolar</option><option>Primaria</option><option>Secundaria</option></select></div>
+    <div><label>Fase</label><input data-key="phase" type="text" placeholder="Fase 2, 3, 4, 5 o 6" /></div>
+  </div>
+  <h3>Características del servicio</h3>
+  <div class="checks">
+    <label><input data-key="service_regular" type="checkbox"> Escuela regular</label>
+    <label><input data-key="service_multigrade" type="checkbox"> Organización multigrado</label>
+    <label><input data-key="service_indigenous" type="checkbox"> Atención a población indígena</label>
+    <label><input data-key="service_migrant" type="checkbox"> Movilidad / migración</label>
+    <label><input data-key="service_rural" type="checkbox"> Contexto rural</label>
+    <label><input data-key="service_urban" type="checkbox"> Contexto urbano / periurbano</label>
+  </div>
+  <h3>Quiénes participaron</h3>
+  <textarea data-key="participants" placeholder="Docentes, dirección, supervisión, estudiantes, familias, autoridades, integrantes de la comunidad u otros actores."></textarea>
+</section>
+
+<!-- ===== PASO 2 ===== -->
+<section class="card" data-step="2">
+  <div class="block-title"><div><h2>2. Conocer a las y los estudiantes</h2><p class="lead">Recupera saberes, intereses, condiciones, relaciones y experiencias de aprendizaje.</p></div><span class="chip">Estudiantes</span></div>
+  <div class="grid grid-2">
+    <div><label>¿Qué saben y qué desean aprender?</label><textarea data-key="students_know"></textarea></div>
+    <div><label>¿Cómo es el entorno donde viven?</label><textarea data-key="students_environment"></textarea></div>
+    <div><label>¿Qué hacen antes y después de acudir a la escuela?</label><textarea data-key="students_routines"></textarea></div>
+    <div><label>Intereses, preocupaciones y expectativas</label><textarea data-key="students_interests"></textarea></div>
+    <div><label>Actividades, estrategias o proyectos que más les han interesado</label><textarea data-key="students_engagement"></textarea></div>
+    <div><label>Relaciones entre estudiantes</label><textarea data-key="students_relationships"></textarea></div>
+    <div><label>¿Cómo nos relacionamos como docentes con las y los estudiantes?</label><textarea data-key="teacher_student_relation"></textarea></div>
+    <div><label>Asistencia, permanencia y participación</label><textarea data-key="students_attendance"></textarea></div>
+  </div>
+  <h3>Diversidad y condiciones para aprender</h3>
+  <div class="grid grid-2">
+    <div><label>Diversidad lingüística</label><textarea data-key="language_diversity"></textarea></div>
+    <div><label>Necesidades de acceso, participación o aprendizaje observadas</label><textarea data-key="learning_conditions"></textarea></div>
+    <div><label>Situaciones familiares o económicas que inciden en la experiencia escolar</label><textarea data-key="family_economic_conditions"></textarea></div>
+    <div><label>Fortalezas, talentos, saberes y experiencias que pueden aprovecharse</label><textarea data-key="student_strengths"></textarea></div>
+  </div>
+</section>
+
+<!-- ===== PASO 3 ===== -->
+<section class="card" data-step="3">
+  <div class="block-title"><div><h2>3. Familias y comunidad</h2><p class="lead">La lectura significativa incorpora las voces y experiencias de quienes forman parte de la comunidad escolar.</p></div><span class="chip">Comunidad</span></div>
+  <h3>Familias</h3>
+  <div class="grid grid-2">
+    <div><label>¿Cómo están conformadas?</label><textarea data-key="families_structure"></textarea></div>
+    <div><label>Lugares de origen y movilidad</label><textarea data-key="families_origin"></textarea></div>
+    <div><label>Lenguas que hablan</label><textarea data-key="families_languages"></textarea></div>
+    <div><label>¿Cómo se involucran en la formación escolar?</label><textarea data-key="families_involvement"></textarea></div>
+    <div><label>Vínculos actuales escuela–familias</label><textarea data-key="school_family_links"></textarea></div>
+    <div><label>Expectativas, preocupaciones y propuestas de las familias</label><textarea data-key="families_voice"></textarea></div>
+  </div>
+  <h3>Comunidad</h3>
+  <div class="grid grid-2">
+    <div><label>Principales problemáticas o tensiones de la comunidad</label><textarea data-key="community_problems"></textarea></div>
+    <div><label>Saberes, conocimientos y prácticas comunitarias</label><textarea data-key="community_knowledge"></textarea></div>
+    <div><label>Lenguas, tradiciones, festividades y expresiones culturales</label><textarea data-key="community_culture"></textarea></div>
+    <div><label>Actividades económicas y formas de vida relevantes</label><textarea data-key="community_economy"></textarea></div>
+    <div><label>Recursos, espacios, organizaciones y personas que pueden colaborar</label><textarea data-key="community_resources"></textarea></div>
+    <div><label>Vínculos actuales con la escuela</label><textarea data-key="community_links"></textarea></div>
+  </div>
+</section>
+
+<!-- ===== PASO 4 ===== -->
+<section class="card" data-step="4">
+  <div class="block-title"><div><h2>4. El equipo docente y las condiciones escolares</h2><p class="lead">Analiza fortalezas, dificultades, organización, espacios, materiales y condiciones que hacen posible o limitan el trabajo.</p></div><span class="chip">Escuela</span></div>
+  <div class="grid grid-2">
+    <div><label>¿Cómo está conformado el equipo?</label><textarea data-key="team_structure"></textarea></div>
+    <div><label>Mayores fortalezas del colectivo</label><textarea data-key="team_strengths"></textarea></div>
+    <div><label>Dificultades o necesidades del colectivo</label><textarea data-key="team_challenges"></textarea></div>
+    <div><label>Acuerdos, formas de colaboración y comunicación</label><textarea data-key="team_collaboration"></textarea></div>
+    <div><label>Espacios escolares: seguridad, accesibilidad y posibilidades pedagógicas</label><textarea data-key="spaces"></textarea></div>
+    <div><label>Materiales educativos disponibles</label><textarea data-key="materials_available"></textarea></div>
+    <div><label>Materiales o recursos que hacen falta</label><textarea data-key="materials_needed"></textarea></div>
+    <div><label>Recursos tecnológicos y conectividad (si aplica)</label><textarea data-key="technology"></textarea></div>
+  </div>
+  <h3>Condiciones institucionales que conviene tener presentes</h3>
+  <textarea data-key="institutional_conditions" placeholder="Organización escolar, tiempos, responsabilidades, acompañamiento, relaciones institucionales, seguridad, infraestructura, etc."></textarea>
+</section>
+
+<!-- ===== PASO 5 ===== -->
+<section class="card" data-step="5">
+  <div class="block-title"><div><h2>5. Fuentes de información y evidencias</h2><p class="lead">No se trata solo de reunir estadísticas. El fascículo destaca la experiencia cotidiana, diversas fuentes y la revisión colectiva.</p></div><span class="chip">Evidencias</span></div>
+  <div class="checks">
+    <label><input data-key="src_productions" type="checkbox"> Producciones de grupos escolares</label>
+    <label><input data-key="src_observations" type="checkbox"> Observaciones de la jornada escolar</label>
+    <label><input data-key="src_students" type="checkbox"> Conversaciones con estudiantes</label>
+    <label><input data-key="src_walks" type="checkbox"> Recorridos por la localidad</label>
+    <label><input data-key="src_families" type="checkbox"> Conversaciones con familias</label>
+    <label><input data-key="src_community" type="checkbox"> Conversaciones con comunidad / autoridades</label>
+    <label><input data-key="src_evaluations" type="checkbox"> Evaluaciones diagnósticas / aprendizajes</label>
+    <label><input data-key="src_media" type="checkbox"> Medios de comunicación u otras fuentes</label>
+  </div>
+  <h3>Registro de evidencias</h3>
+  <div class="table-wrap">
+    <table id="evidenceTable">
+      <thead><tr><th>Fuente / evidencia</th><th>Qué encontramos</th><th>Qué nos hace pensar o preguntar</th><th>Quitar</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <button class="btn btn-secondary no-print" style="margin-top:4px" onclick="addRow('evidenceTable', ['Fuente / evidencia','Qué encontramos','Qué nos hace pensar o preguntar']); saveLocal(true);">➕ Agregar fila</button>
+  <div class="note">Recomendación práctica: cada afirmación importante del análisis debe poder relacionarse con alguna experiencia, observación, conversación, producción o dato revisado por el colectivo.</div>
+</section>
+
+<!-- ===== PASO 6 ===== -->
+<section class="card" data-step="6">
+  <div class="block-title"><div><h2>6. Situaciones y problemas que identificamos</h2><p class="lead">Pasa de observaciones aisladas a situaciones relevantes y significativas para el trabajo escolar.</p></div><span class="chip">Identificación</span></div>
+  <div class="grid grid-2">
+    <div><label>¿Qué situaciones o problemas identificamos?</label><textarea data-key="problems_list"></textarea></div>
+    <div><label>¿Por qué son relevantes y significativos para la comunidad?</label><textarea data-key="problems_relevance"></textarea></div>
+  </div>
+  <h3>Caracterización inicial</h3>
+  <p class="helper">Evita quedarte en etiquetas generales (“hay bajo rendimiento”, “no participan”). Describe qué sucede, a quiénes involucra, dónde, cuándo y bajo qué condiciones.</p>
+  <div class="table-wrap">
+    <table id="problemTable">
+      <thead><tr><th>Situación / problema</th><th>¿A quiénes involucra?</th><th>¿Dónde/cuándo ocurre?</th><th>Manifestaciones o evidencias</th><th>Quitar</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <button class="btn btn-secondary no-print" style="margin-top:4px" onclick="addRow('problemTable', ['Situación / problema','¿A quiénes involucra?','¿Dónde/cuándo ocurre?','Manifestaciones o evidencias']); saveLocal(true);">➕ Agregar fila</button>
+</section>
+
+<!-- ===== PASO 7 ===== -->
+<section class="card" data-step="7">
+  <div class="block-title"><div><h2>7. Problematización profunda</h2><p class="lead">Cuestiona las primeras explicaciones, amplía la mirada, identifica relaciones, condiciones, consecuencias, creencias y posibilidades de transformación.</p></div><span class="chip">Profundización</span></div>
+  <div class="question"><span class="tag">Causas y condiciones</span><p>¿Qué condiciones se vinculan con la situación?</p><textarea data-key="prob_conditions"></textarea></div>
+  <div class="question"><span class="tag">Impactos</span><p>¿Cómo impacta en el aprendizaje, participación, permanencia, relaciones familiares y comunidad?</p><textarea data-key="prob_impacts"></textarea></div>
+  <div class="question"><span class="tag">Relaciones</span><p>¿Qué otras situaciones pueden estar relacionadas y no habíamos identificado al inicio?</p><textarea data-key="prob_links"></textarea></div>
+  <div class="question"><span class="tag">Miradas y creencias</span><p>¿Desde qué ideas, supuestos o creencias estamos interpretando lo que ocurre? ¿Qué mirada necesitamos cuestionar?</p><textarea data-key="prob_beliefs"></textarea></div>
+  <div class="question"><span class="tag">Voces</span><p>¿Qué dicen o necesitan estudiantes, familias y otras personas de la comunidad? ¿A quiénes no hemos escuchado todavía?</p><textarea data-key="prob_voices"></textarea></div>
+  <div class="question"><span class="tag">Acciones actuales</span><p>¿Qué hemos hecho para mantener, atender o transformar la situación? ¿Qué ha funcionado y qué no?</p><textarea data-key="prob_actions"></textarea></div>
+  <div class="question"><span class="tag">Condiciones estructurales</span><p>¿Hay factores sociales, económicos, culturales, ambientales o institucionales más amplios que debamos considerar?</p><textarea data-key="prob_structural"></textarea></div>
+  <div class="question"><span class="tag">Escuela y alcance</span><p>¿Qué sí puede hacer la escuela mediante procesos formativos y qué requiere apoyos o acciones fuera de su alcance?</p><textarea data-key="prob_school_scope"></textarea></div>
+  <h3>Redacción integradora del problema o situación prioritaria</h3>
+  <textarea data-key="problem_integrative" placeholder="Redacta aquí la situación de forma compleja: qué sucede + condiciones relacionadas + a quiénes afecta + cómo se expresa + qué mirada o práctica necesita revisarse + por qué importa para la formación."></textarea>
+</section>
+
+<!-- ===== PASO 8 ===== -->
+<section class="card" data-step="8">
+  <div class="block-title"><div><h2>8. Horizonte de cambio y posibilidades de acción</h2><p class="lead">Define qué quieren transformar, hacia dónde desean que cambie y qué posibilidades formativas existen desde la escuela.</p></div><span class="chip">Transformación</span></div>
+  <div class="grid grid-2">
+    <div><label>¿Qué queremos transformar?</label><textarea data-key="change_what"></textarea></div>
+    <div><label>¿En qué sentido o dirección queremos que cambie?</label><textarea data-key="change_direction"></textarea></div>
+    <div><label>¿Cómo imaginamos la situación deseada?</label><textarea data-key="desired_situation"></textarea></div>
+    <div><label>¿Qué aprendizaje o formación queremos favorecer en las y los estudiantes?</label><textarea data-key="formative_purpose"></textarea></div>
+  </div>
+  <h3>Con qué contamos</h3>
+  <div class="grid grid-2">
+    <div><label>Saberes, experiencias y capacidades del colectivo</label><textarea data-key="resources_team"></textarea></div>
+    <div><label>Saberes y capacidades de estudiantes</label><textarea data-key="resources_students"></textarea></div>
+    <div><label>Recursos y saberes de familias/comunidad</label><textarea data-key="resources_community"></textarea></div>
+    <div><label>Condiciones, apoyos o alianzas externas</label><textarea data-key="resources_external"></textarea></div>
+  </div>
+  <h3>Implicaciones y actores</h3>
+  <div class="grid grid-2">
+    <div><label>¿Requiere ser abordado en todos los grados o solo en algunos? ¿Cuáles?</label><textarea data-key="grades_scope"></textarea></div>
+    <div><label>Participación esperada de estudiantes, familias y personal escolar</label><textarea data-key="actors_school"></textarea></div>
+    <div><label>Actores externos a los que podríamos recurrir</label><textarea data-key="actors_external"></textarea></div>
+    <div><label>Condiciones materiales o humanas que faltan y cómo podrían gestionarse</label><textarea data-key="gaps"></textarea></div>
+  </div>
+</section>
+
+<!-- ===== PASO 9 ===== -->
+<section class="card" data-step="9">
+  <div class="block-title"><div><h2>9. Integración final y criterios de calidad</h2><p class="lead">Aquí se arma una versión coherente, revisable y útil como insumo para la contextualización y el codiseño posteriores.</p></div><span class="chip">Cierre</span></div>
+  <div class="reality-map print-avoid">
+    <div class="map-col"><h4>Realidad observada</h4><div id="mapObserved" class="small">Completa pasos anteriores.</div></div>
+    <div class="map-col center"><h4>Situación prioritaria</h4><div id="mapPriority" class="small">Completa la problematización.</div></div>
+    <div class="map-col"><h4>Horizonte de cambio</h4><div id="mapChange" class="small">Define el cambio deseado.</div></div>
+  </div>
+
+  <h3>Síntesis ejecutiva de la lectura de la realidad</h3>
+  <textarea data-key="executive_summary" placeholder="Redacta una síntesis de 1–3 páginas: contexto y comunidad; estudiantes y familias; fortalezas y condiciones; evidencias; situaciones relevantes; problematización; horizonte de cambio y posibilidades formativas."></textarea>
+
+  <h3>Acuerdos del colectivo para mantener actualizada la lectura</h3>
+  <textarea data-key="update_agreements" placeholder="¿Cuándo la revisarán? ¿Cómo registrarán nuevas observaciones? ¿Quiénes participarán? ¿Cómo incorporarán nuevas voces y evidencias?"></textarea>
+
+  <h3>Lista de verificación</h3>
+  <div class="checks">
+    <label><input data-key="qc_context" type="checkbox"> Describimos contexto y comunidad.</label>
+    <label><input data-key="qc_students" type="checkbox"> Recuperamos voces, condiciones e intereses del alumnado.</label>
+    <label><input data-key="qc_families" type="checkbox"> Consideramos familias y vínculos.</label>
+    <label><input data-key="qc_team" type="checkbox"> Analizamos fortalezas y dificultades del colectivo.</label>
+    <label><input data-key="qc_sources" type="checkbox"> Utilizamos diversas fuentes.</label>
+    <label><input data-key="qc_evidence" type="checkbox"> Relacionamos afirmaciones importantes con evidencias.</label>
+    <label><input data-key="qc_problems" type="checkbox"> Identificamos situaciones relevantes y significativas.</label>
+    <label><input data-key="qc_problem" type="checkbox"> Problematizamos causas, relaciones, impactos y miradas.</label>
+    <label><input data-key="qc_change" type="checkbox"> Definimos horizonte de cambio y situación deseada.</label>
+    <label><input data-key="qc_scope" type="checkbox"> Reconocemos alcance, recursos y necesidades de apoyo.</label>
+    <label><input data-key="qc_formative" type="checkbox"> Precisamos posibilidades de formación desde la escuela.</label>
+    <label><input data-key="qc_update" type="checkbox"> Acordamos cómo actualizar la lectura durante el ciclo.</label>
+  </div>
+
+  <div id="qualityMessage" class="warning" style="margin-top:16px">Completa la lista de verificación para valorar qué tan consolidado está el documento.</div>
+
+  <div class="banner" style="margin-top:16px">
+    <strong>Importante:</strong> esta plataforma no sustituye las decisiones del colectivo docente. La lectura de la realidad es un proceso colectivo, continuo y actualizable; esta ruta solo ayuda a organizarlo de manera amplia.
+  </div>
+
+  <div class="source">Base principal: Comisión Nacional para la Mejora Continua de la Educación (2023), <em>¡Aprendamos en comunidad! Reconociendo nuestro contexto, Fascículo 1</em>. El fascículo plantea que la lectura de la realidad parte del análisis del contexto socioeducativo, integra diversas fuentes, escucha voces de la comunidad y permite identificar situaciones o problemas para orientar posteriormente contextualización y codiseño.</div>
+</section>
+
+<!-- Navegación -->
+<div class="nav no-print">
+  <button class="btn btn-secondary" id="prevBtn" onclick="prevStep()">← Anterior</button>
+  <div class="right">
+    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Siguiente →</button>
+    <button class="btn btn-secondary" onclick="printPDF()">🖨️ Imprimir / Guardar PDF</button>
+  </div>
+</div>
+
+<div class="footer-note no-print">Funcionamiento local: los datos se guardan en el almacenamiento del navegador de este equipo. No se envían a ningún servidor.</div>
+</div>
+</main>
+</div>
+
+<!-- ===== PANEL DE PERSONALIZACIÓN ===== -->
+<button class="custom-toggle no-print" onclick="toggleCustom()" title="Personalizar interfaz">🎨</button>
+<div class="custom-panel no-print" id="customPanel">
+  <h4>🎨 Personalizar interfaz</h4>
+  <div class="toggle">
+    <input type="checkbox" id="darkToggle" onchange="toggleDark()"> <label for="darkToggle" style="margin:0">Modo oscuro</label>
+  </div>
+  <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--muted)">Color de fondo</div>
+  <div class="row">
+    <div class="opt" style="background:#f4f7fb" onclick="setBg('default',this)" title="Predeterminado"></div>
+    <div class="opt" style="background:#f0f4f8" onclick="setBg('soft',this)" title="Suave"></div>
+    <div class="opt" style="background:#faf6f0" onclick="setBg('warm',this)" title="Cálido"></div>
+  </div>
+  <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--muted)">Color de acento</div>
+  <div class="row">
+    <div class="opt" style="background:#175cd3" onclick="setAccent('blue',this)" title="Azul"></div>
+    <div class="opt" style="background:#059669" onclick="setAccent('green',this)" title="Verde"></div>
+    <div class="opt" style="background:#7c3aed" onclick="setAccent('purple',this)" title="Morado"></div>
+    <div class="opt" style="background:#ea580c" onclick="setAccent('orange',this)" title="Naranja"></div>
+    <div class="opt" style="background:#e11d48" onclick="setAccent('rose',this)" title="Rosa"></div>
+  </div>
+  <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px" onclick="resetCustom()">Restablecer</button>
+</div>
+
+<input id="fileInput" class="hidden" type="file" accept=".json" />
+<div class="toast" id="toast">Guardado</div>
+
+<script>
+// ===== ESTADO Y VARIABLES =====
+const STEPS = [
+  "Punto de partida","Estudiantes","Familias y comunidad","Equipo docente","Fuentes y evidencias",
+  "Situaciones y problemas","Problematización","Horizonte de cambio","Integración final"
+];
+let current = 1;
+let state = {};
+
+// ===== UTILIDADES =====
+function allFields(){ return [...document.querySelectorAll("[data-key]")]; }
+
+function setStateFromDOM(){
+  allFields().forEach(el => {
+    if(el.type === "checkbox") state[el.dataset.key] = el.checked;
+    else state[el.dataset.key] = el.value;
+  });
+  // Filas de tablas
+  state.evidenceRows = [...document.querySelectorAll("#evidenceTable tbody tr")].map(tr =>
+    [...tr.querySelectorAll("input,textarea")].map(x => x.value)
+  );
+  state.problemRows = [...document.querySelectorAll("#problemTable tbody tr")].map(tr =>
+    [...tr.querySelectorAll("input,textarea")].map(x => x.value)
+  );
+}
+
+function applyState(){
+  allFields().forEach(el => {
+    const v = state[el.dataset.key];
+    if(el.type === "checkbox") el.checked = !!v;
+    else if(v !== undefined) el.value = v;
+  });
+  rebuildRows("#evidenceTable", state.evidenceRows || [], ["Fuente / evidencia","Qué encontramos","Qué nos hace pensar o preguntar"]);
+  rebuildRows("#problemTable", state.problemRows || [], ["Situación / problema","¿A quiénes involucra?","¿Dónde/cuándo ocurre?","Manifestaciones o evidencias"]);
+  updateUI();
+}
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+// ===== ACTUALIZAR INTERFAZ =====
+function updateUI(){
+  updateProgress();
+  updateSummaryMap();
+}
+
+// ===== GUARDADO LOCAL =====
+const STORAGE_KEY = "lecturaRealidadOffline";
+
+function saveLocal(silent){
+  setStateFromDOM();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if(!silent) toast("💾 Datos guardados en este equipo");
+    updateUI();
+  } catch(e) {
+    toast("⚠️ Error al guardar: almacenamiento lleno");
+  }
+}
+
+function loadLocal(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = parsed;
+      applyState();
+    }
+  } catch(e) {
+    console.warn("No se pudo cargar el respaldo local:", e);
+  }
+}
+
+// ===== RESPALDO (DESCARGA / CARGA) =====
+function downloadBackup(){
+  setStateFromDOM();
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "respaldo_lectura_de_la_realidad.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("⬇️ Respaldo descargado");
+}
+
+function loadFile(){
+  document.getElementById("fileInput").click();
+}
+
+document.getElementById("fileInput").addEventListener("change", function(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      state = parsed;
+      applyState();
+      saveLocal(true);
+      toast("📂 Respaldo cargado correctamente");
+    } catch(err) {
+      alert("El archivo no parece ser un respaldo válido.");
+    }
+  };
+  reader.readAsText(f);
+  e.target.value = "";
+});
+
+// ===== TABLAS DINÁMICAS =====
+function addRow(tableId, cols){
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  const tr = document.createElement("tr");
+  cols.forEach((col, i) => {
+    const td = document.createElement("td");
+    const input = document.createElement(i === 0 ? "input" : "textarea");
+    if(i === 0) input.type = "text";
+    else input.rows = 2;
+    input.placeholder = col;
+    td.appendChild(input);
+    tr.appendChild(td);
+  });
+  // Botón eliminar
+  const tdBtn = document.createElement("td");
+  const btn = document.createElement("button");
+  btn.className = "btn btn-danger";
+  btn.textContent = "Eliminar";
+  btn.style.fontSize = "11px";
+  btn.style.padding = "6px 10px";
+  btn.onclick = () => {
+    tr.remove();
+    saveLocal(true);
+  };
+  tdBtn.appendChild(btn);
+  tr.appendChild(tdBtn);
+  tbody.appendChild(tr);
+  // Auto-guardado en inputs
+  [...tr.querySelectorAll("input,textarea")].forEach(el => {
+    el.addEventListener("input", () => saveLocal(true));
+  });
+}
+
+function rebuildRows(tableSel, rows, cols){
+  const tbody = document.querySelector(`${tableSel} tbody`);
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  const tableId = tableSel.includes("evidence") ? "evidenceTable" : "problemTable";
+  rows.forEach(row => {
+    addRow(tableId, cols);
+    const tr = tbody.lastElementChild;
+    [...tr.querySelectorAll("input,textarea")].forEach((el, i) => {
+      el.value = row[i] || "";
+    });
+  });
+  if(!rows.length) addRow(tableId, cols);
+}
+
+// ===== PROGRESO =====
+function percent(){
+  const fields = allFields();
+  let answered = 0, total = 0;
+  fields.forEach(el => {
+    if(el.closest(".no-count")) return;
+    total++;
+    if(el.type === "checkbox" ? el.checked : (el.value || "").trim().length > 0) answered++;
+  });
+  return total ? Math.round(answered / total * 100) : 0;
+}
+
+function updateProgress(){
+  const p = percent();
+  document.getElementById("completion").textContent = p + "% completado";
+  document.getElementById("progressBar").style.width = p + "%";
+}
+
+// ===== NAVEGACIÓN =====
+function buildSteps(){
+  const holder = document.getElementById("steps");
+  holder.innerHTML = "";
+  STEPS.forEach((s, i) => {
+    const n = i + 1;
+    const div = document.createElement("div");
+    div.className = "step " + (n === current ? "active " : "") + (n < current ? "done" : "");
+    div.innerHTML = `<div class="num">${n}</div><div><strong>${s}</strong><small>${n === current ? "En edición" : n < current ? "Revisado" : "Pendiente"}</small></div>`;
+    div.onclick = () => goStep(n);
+    holder.appendChild(div);
+  });
+  document.getElementById("stepLabel").textContent = `Paso ${current} de ${STEPS.length}`;
+  document.getElementById("prevBtn").disabled = current === 1;
+  document.getElementById("nextBtn").textContent = current === STEPS.length ? "Finalizar" : "Siguiente →";
+}
+
+function showStep(n){
+  current = n;
+  document.querySelectorAll("[data-step]").forEach(sec => {
+    sec.classList.toggle("hidden", Number(sec.dataset.step) !== n);
+  });
+  buildSteps();
+  updateProgress();
+  updateSummaryMap();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+function goStep(n){
+  saveLocal(true);
+  showStep(n);
+}
+
+function nextStep(){
+  if(current < STEPS.length) showStep(current + 1);
+  else printPDF();
+}
+
+function prevStep(){
+  if(current > 1) showStep(current - 1);
+}
+
+// ===== MAPA RESUMEN =====
+function updateSummaryMap(){
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = val || "Aún no se ha registrado información.";
+  };
+  set("mapObserved", state.problems_list || state.community_problems);
+  set("mapPriority", state.problem_integrative);
+  set("mapChange", state.desired_situation || state.change_direction);
+
+  const school = state.school || "Escuela";
+  const loc = state.location || "";
+  const date = state.date || "";
+  const cover = document.getElementById("coverSummary");
+  if(cover){
+    cover.innerHTML = `<p><strong>${esc(school)}</strong>${loc ? "<br>" + esc(loc) : ""}</p><p>${date ? fmtDate(date) : "Fecha pendiente"}</p>`;
+  }
+  quality();
+}
+
+function quality(){
+  const ids = ["qc_context","qc_students","qc_families","qc_team","qc_sources","qc_evidence","qc_problems","qc_problem","qc_change","qc_scope","qc_formative","qc_update"];
+  const ok = ids.filter(id => state[id]).length;
+  const msg = document.getElementById("qualityMessage");
+  if(!msg) return;
+  if(ok === ids.length){
+    msg.className = "banner";
+    msg.innerHTML = "<strong>✅ Revisión completada:</strong> la lista de verificación está marcada. Antes de imprimir, hagan una última lectura colectiva para asegurar que las afirmaciones representan las voces y evidencias realmente disponibles.";
+  } else {
+    msg.className = "warning";
+    msg.innerHTML = `<strong>⏳ Revisión pendiente:</strong> ${ok} de ${ids.length} criterios están marcados. El documento puede imprimirse en cualquier momento, pero conviene revisar los criterios pendientes.`;
+  }
+}
+
+function esc(s){
+  return String(s || "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function fmtDate(d){
+  const parts = d.split("-");
+  if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return d;
+}
+
+// ===== IMPRIMIR =====
+function printPDF(){
+  setStateFromDOM();
+  saveLocal(true);
+  // Mostrar todos los pasos para que el PDF/impresión incluya el documento
+  // completo (los pasos permanecen ocultos en pantalla mientras se navega).
+  document.querySelectorAll("[data-step]").forEach(sec => sec.classList.remove("hidden"));
+  window.print();
+}
+
+// Restaurar la vista de un solo paso al cerrar el diálogo de impresión
+window.addEventListener("afterprint", () => showStep(current));
+
+// ===== RESET =====
+function resetAll(){
+  if(confirm("Esto borrará los datos guardados en este navegador. ¿Continuar?")){
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+// ===== PERSONALIZACIÓN =====
+function toggleCustom(){
+  document.getElementById("customPanel").classList.toggle("show");
+}
+
+function toggleDark(){
+  const dark = document.getElementById("darkToggle").checked;
+  document.body.classList.toggle("dark", dark);
+  localStorage.setItem("lectura_dark", dark ? "1" : "0");
+}
+
+function setBg(type, el){
+  document.body.classList.remove("bg-soft", "bg-warm");
+  if(type === "soft") document.body.classList.add("bg-soft");
+  if(type === "warm") document.body.classList.add("bg-warm");
+  document.querySelectorAll("#customPanel .opt").forEach(o => {
+    if(o.getAttribute("onclick")?.includes("setBg")) o.classList.remove("active");
+  });
+  el.classList.add("active");
+  localStorage.setItem("lectura_bg", type);
+}
+
+function setAccent(color, el){
+  document.body.classList.remove("accent-green", "accent-purple", "accent-orange", "accent-rose");
+  if(color !== "blue") document.body.classList.add("accent-" + color);
+  document.querySelectorAll("#customPanel .opt").forEach(o => {
+    if(o.getAttribute("onclick")?.includes("setAccent")) o.classList.remove("active");
+  });
+  el.classList.add("active");
+  localStorage.setItem("lectura_accent", color);
+}
+
+function resetCustom(){
+  document.body.classList.remove("dark", "bg-soft", "bg-warm", "accent-green", "accent-purple", "accent-orange", "accent-rose");
+  document.getElementById("darkToggle").checked = false;
+  document.querySelectorAll("#customPanel .opt").forEach(o => o.classList.remove("active"));
+  localStorage.removeItem("lectura_dark");
+  localStorage.removeItem("lectura_bg");
+  localStorage.removeItem("lectura_accent");
+  toast("🎨 Personalización restablecida");
+}
+
+function loadCustom(){
+  if(localStorage.getItem("lectura_dark") === "1"){
+    document.body.classList.add("dark");
+    document.getElementById("darkToggle").checked = true;
+  }
+  const bg = localStorage.getItem("lectura_bg");
+  if(bg === "soft") document.body.classList.add("bg-soft");
+  if(bg === "warm") document.body.classList.add("bg-warm");
+  const accent = localStorage.getItem("lectura_accent");
+  if(accent && accent !== "blue") document.body.classList.add("accent-" + accent);
+  // Marcar opciones activas
+  setTimeout(() => {
+    document.querySelectorAll("#customPanel .opt").forEach(o => {
+      const oc = o.getAttribute("onclick") || "";
+      if(oc.includes("setBg") && bg && oc.includes(bg)) o.classList.add("active");
+      if(oc.includes("setAccent") && accent && oc.includes(accent)) o.classList.add("active");
+    });
+  }, 50);
+}
+
+// ===== EVENTOS =====
+document.addEventListener("input", e => {
+  if(e.target.matches("[data-key]")) saveLocal(true);
+});
+document.addEventListener("change", e => {
+  if(e.target.matches("[data-key]")) saveLocal(true);
+});
+
+// Auto-guardado periódico (cada 15 segundos)
+setInterval(() => {
+  setStateFromDOM();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {}
+}, 15000);
+
+// ===== INICIALIZACIÓN =====
+loadCustom();
+// Nota: ya no se restauran automáticamente datos guardados en este navegador.
+// El formulario siempre inicia en blanco; para recuperar información
+// previa hay que usar el botón "📂 Cargar respaldo" con el archivo .json.
+
+// Asegurar que exista al menos una fila en tablas
+if(!document.querySelector("#evidenceTable tbody tr")) addRow("evidenceTable", ["Fuente / evidencia","Qué encontramos","Qué nos hace pensar o preguntar"]);
+if(!document.querySelector("#problemTable tbody tr")) addRow("problemTable", ["Situación / problema","¿A quiénes involucra?","¿Dónde/cuándo ocurre?","Manifestaciones o evidencias"]);
+
+// Fecha por defecto
+if(!state.date) state.date = new Date().toISOString().slice(0,10);
+applyState();
+showStep(1);
+</script>
+</body>
+</html>
